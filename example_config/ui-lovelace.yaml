@@ -1,0 +1,25 @@
+title: Home
+views:
+  - title: Home
+    path: default_view
+    cards:
+      - title: Script
+        show_header_toggle: false
+        type: entities
+        entities:
+          - entity: script.cca_test_kitchen_home
+          - entity: script.cca_test_kitchen_speakers
+      - title: Input Numbers
+        type: entities
+        entities:
+          - entity: input_number.computer_speakers
+          - entity: input_number.kitchen_home
+          - entity: input_number.kitchen_speakers
+      - title: Switches
+        show_header_toggle: false
+        type: entities
+        entities:
+          - entity: switch.computer_speakers
+          - entity: switch.kitchen_home
+          - entity: switch.kitchen_speakers
+

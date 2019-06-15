@@ -1,0 +1,50 @@
+- platform: template
+  switches:
+    computer_speakers:
+      friendly_name: Computer Speakers
+      entity_id:
+      - cast_volume_tracker.computer_speakers
+      value_template: "{{ not state_attr('cast_volume_tracker.computer_speakers', 'is_volume_muted') }}"
+      turn_on:
+        service: cast_volume_tracker.volume_mute
+        data:
+          entity_id: cast_volume_tracker.computer_speakers
+          is_volume_muted: false
+      turn_off:
+        service: cast_volume_tracker.volume_mute
+        data:
+          entity_id: cast_volume_tracker.computer_speakers
+          is_volume_muted: true
+
+
+    kitchen_home:
+      friendly_name: Kitchen Home
+      entity_id:
+      - cast_volume_tracker.kitchen_home
+      value_template: "{{ not state_attr('cast_volume_tracker.kitchen_home', 'is_volume_muted') }}"
+      turn_on:
+        service: cast_volume_tracker.volume_mute
+        data:
+          entity_id: cast_volume_tracker.kitchen_home
+          is_volume_muted: false
+      turn_off:
+        service: cast_volume_tracker.volume_mute
+        data:
+          entity_id: cast_volume_tracker.kitchen_home
+          is_volume_muted: true
+
+    kitchen_speakers:
+      friendly_name: Kitchen Speakers
+      entity_id:
+      - cast_volume_tracker.kitchen_speakers
+      value_template: "{{ not state_attr('cast_volume_tracker.kitchen_speakers', 'is_volume_muted') }}"
+      turn_on:
+        service: cast_volume_tracker.volume_mute
+        data:
+          entity_id: cast_volume_tracker.kitchen_speakers
+          is_volume_muted: false
+      turn_off:
+        service: cast_volume_tracker.volume_mute
+        data:
+          entity_id: cast_volume_tracker.kitchen_speakers
+          is_volume_muted: true

@@ -1,0 +1,74 @@
+computer_speakers:
+  name: Computer Speakers
+  icon: mdi:sort-numeric
+  min: 0
+  max: 100
+  step: 1
+  entity_id:
+  - cast_volume_tracker.computer_speakers
+  set_value_script:
+  - service: cast_volume_tracker.volume_set
+    data_template:
+      entity_id: cast_volume_tracker.computer_speakers
+      volume_level: "{{ value | multiply(0.01) }}"
+  value_template: "{{ states('cast_volume_tracker.computer_speakers') | round(0) }}"
+  icon_template: >
+    {% if not state_attr('cast_volume_tracker.computer_speakers', 'cast_is_on') %}
+        mdi:cast
+    {% elif state_attr('cast_volume_tracker.computer_speakers', 'is_volume_muted') %}
+        mdi:cast-off
+    {% else %}
+        mdi:cast-connected
+    {% endif %}
+
+kitchen_home:
+  name: Kitchen Home
+  icon: mdi:sort-numeric
+  min: 0
+  max: 100
+  step: 1
+  entity_id:
+  - cast_volume_tracker.kitchen_home
+  set_value_script:
+  - service: cast_volume_tracker.volume_set
+    data_template:
+      entity_id: cast_volume_tracker.kitchen_home
+      volume_level: "{{ value | multiply(0.01) }}"
+  value_template: "{{ states('cast_volume_tracker.kitchen_home') | round(0) }}"
+  icon_template: >
+    {% if not state_attr('cast_volume_tracker.kitchen_home', 'cast_is_on') %}
+        mdi:cast
+    {% elif state_attr('cast_volume_tracker.kitchen_home', 'is_volume_muted') %}
+        mdi:cast-off
+    {% else %}
+        mdi:cast-connected
+    {% endif %}
+
+kitchen_speakers:
+  name: Kitchen Speakers
+  icon: mdi:sort-numeric
+  min: 0
+  max: 100
+  step: 1
+  entity_id:
+  - cast_volume_tracker.kitchen_speakers
+  - cast_volume_tracker.computer_speakers
+  set_value_script:
+  - service: cast_volume_tracker.volume_set
+    data_template:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      volume_level: "{{ value | multiply(0.01) }}"
+  value_template: >
+    {% if is_state_attr('cast_volume_tracker.kitchen_speakers', 'cast_is_on', 'true') %}
+        {{ states('cast_volume_tracker.kitchen_speakers') | round(0) }}
+    {% else %}
+        {{ states('cast_volume_tracker.computer_speakers') | round(0) }}
+    {% endif %}
+  icon_template: >
+    {% if not state_attr('cast_volume_tracker.kitchen_speakers', 'cast_is_on') %}
+        mdi:cast
+    {% elif state_attr('cast_volume_tracker.kitchen_speakers', 'is_volume_muted') %}
+        mdi:cast-off
+    {% else %}
+        mdi:cast-connected
+    {% endif %}

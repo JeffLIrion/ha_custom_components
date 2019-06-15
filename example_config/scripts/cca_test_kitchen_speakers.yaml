@@ -1,0 +1,705 @@
+cca_test_kitchen_speakers:
+  alias: "CCA: Test (Kitchen Speakers)"
+  sequence:
+  # GROUP SPEAKER TESTS
+  
+  # Initialize
+  - service: media_player.turn_off
+    entity_id: media_player.kitchen_speakers
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      is_volume_muted: true
+
+  #Set the Kitchen Home and Computer Speakers cast volume trackers to 7
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_home, cast_volume_tracker.computer_speakers
+      volume_level: 0.07
+  - delay: '00:00:01'
+
+  # While the speakers are off, set the cast volume tracker to 10
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      volume_level: 0.10
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'expected_volume_level') | round(3) == 0.000 %}
+          PASS: cast_volume_tracker.kitchen_speakers.expected_volume_level = 0.000
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.expected_volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'expected_volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 10 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 10
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 10
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.computer_speakers', 'expected_volume_level') | round(3) == 0.000 %}
+          PASS: cast_volume_tracker.computer_speakers.expected_volume_level = 0.000
+        {% else %}
+          FAIL: cast_volume_tracker.computer_speakers.expected_volume_level = {{ state_attr('cast_volume_tracker.computer_speakers', 'expected_volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.computer_speakers', 'value') | round(0) == 10 %}
+          PASS: cast_volume_tracker.computer_speakers.value = 10
+        {% else %}
+          FAIL: cast_volume_tracker.computer_speakers.value = {{ state_attr('cast_volume_tracker.computer_speakers', 'value') | round(0) }} != 10
+        {% endif %}
+
+  # Turn the speakers on
+  - delay: '00:00:01'
+  - service: media_player.turn_on
+    entity_id: media_player.kitchen_speakers
+  - delay: '00:00:02'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.100 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.100
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.100
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.100 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.100
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.100
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 10 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 10
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 10
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.computer_speakers', 'volume_level') | round(3) == 0.100 %}
+          PASS: cast_volume_tracker.computer_speakers.volume_level = 0.100
+        {% else %}
+          FAIL: cast_volume_tracker.computer_speakers.volume_level = {{ state_attr('cast_volume_tracker.computer_speakers', 'volume_level') | round(3) }} != 0.100
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.computer_speakers', 'value') | round(0) == 10 %}
+          PASS: cast_volume_tracker.computer_speakers.value = 10
+        {% else %}
+          FAIL: cast_volume_tracker.computer_speakers.value = {{ state_attr('cast_volume_tracker.computer_speakers', 'value') | round(0) }} != 10
+        {% endif %}
+
+  # Mute the volume
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      is_volume_muted: true
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 10 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 10
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 10
+        {% endif %}
+
+  # Un-mute the volume
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      is_volume_muted: false
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.100 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.100
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.100
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.100 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.100
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.100
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 10 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 10
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 10
+        {% endif %}
+
+  # While the speakers are on and not muted, set the volume to 15
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      volume_level: 0.15
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.150 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.150
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.150
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.150 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.150
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.150
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 15 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 15
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 15
+        {% endif %}
+
+  # Mute the volume
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      is_volume_muted: true
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 15 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 15
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 15
+        {% endif %}
+
+  # While the speakers are on and muted, set the volume to 7
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      volume_level: 0.07
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 7 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 7
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 7
+        {% endif %}
+
+  # Un-mute the volume
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      is_volume_muted: false
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.070 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.070
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.070
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.070 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.070
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.070
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 7 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 7
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 7
+        {% endif %}
+
+  # Set the cast volume tracker volume to 0.05
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      volume_level: 0.05
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.050 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.050
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.050
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.050 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.050
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.050
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 5 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 5
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 5
+        {% endif %}
+
+  # Set the input number to 3
+  - delay: '00:00:01'
+  - service: input_number.set_value
+    data:
+      entity_id: input_number.kitchen_speakers
+      value: 3
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.030 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.030
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.030
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.030 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.030
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.030
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 3 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 3
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 3
+        {% endif %}
+
+  # Mute the volume
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      is_volume_muted: true
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 3 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 3
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 3
+        {% endif %}
+
+  # Set the input number to 11
+  - delay: '00:00:01'
+  - service: input_number.set_value
+    data:
+      entity_id: input_number.kitchen_speakers
+      value: 11
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.000 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.000
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 11 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 11
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 11
+        {% endif %}
+
+  # Un-mute the volume
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      is_volume_muted: false
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.110 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.110
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.110
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.110 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.110
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.110
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 11 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 11
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 11
+        {% endif %}
+
+  # Set the cast volume tracker volume to 0.05
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      volume_level: 0.05
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.050 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.050
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.050
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.050 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.050
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.050
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 5 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 5
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 5
+        {% endif %}
+
+  # Set one media player volume to 0.11
+  - delay: '00:00:01'
+  - service: media_player.volume_set
+    data:
+      entity_id: media_player.kitchen_home
+      volume_level: 0.11
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.080 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.080
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.080
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.080 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.080
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.080
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 8 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 8
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 8
+        {% endif %}
+
+  # Set the cast volume tracker volume to 0.08
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      volume_level: 0.08
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.080 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.080
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.080
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.080 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.080
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.080
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 8 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 8
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 8
+        {% endif %}
+
+  # Set one cast volume tracker volume to 0.14
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_home
+      volume_level: 0.14
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.110 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.110
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.110
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.110 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.110
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.110
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 11 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 11
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 11
+        {% endif %}
+
+  # Set the cast volume tracker volume to 0.08
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_set
+    data:
+      entity_id: cast_volume_tracker.kitchen_speakers
+      volume_level: 0.08
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.080 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.080
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.080
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.080 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.080
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.080
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 8 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 8
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 8
+        {% endif %}
+
+  # Mute the volume for one speaker
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_home
+      is_volume_muted: true
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.040 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.040
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.040
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.040 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.040
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.040
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 8 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 8
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 8
+        {% endif %}
+
+  # Un-mute the volume for one speaker
+  - delay: '00:00:01'
+  - service: cast_volume_tracker.volume_mute
+    data:
+      entity_id: cast_volume_tracker.kitchen_home
+      is_volume_muted: false
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) == 0.080 %}
+          PASS: media_player.kitchen_speakers.volume_level = 0.080
+        {% else %}
+          FAIL: media_player.kitchen_speakers.volume_level = {{ state_attr('media_player.kitchen_speakers', 'volume_level') | round(3) }} != 0.080
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) == 0.080 %}
+          PASS: cast_volume_tracker.kitchen_speakers.volume_level = 0.080
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'volume_level') | round(3) }} != 0.080
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 8 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 8
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 8
+        {% endif %}
+
+  # Turn the speakers off
+  - delay: '00:00:01'
+  - service: media_player.turn_off
+    entity_id: media_player.kitchen_speakers
+  - delay: '00:00:01'
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'expected_volume_level') | round(3) == 0.000 %}
+          PASS: cast_volume_tracker.kitchen_speakers.expected_volume_level = 0.000
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.expected_volume_level = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'expected_volume_level') | round(3) }} != 0.000
+        {% endif %}
+  - service: python_script.log
+    data_template:
+      message: >
+        {% if state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) == 8 %}
+          PASS: cast_volume_tracker.kitchen_speakers.value = 8
+        {% else %}
+          FAIL: cast_volume_tracker.kitchen_speakers.value = {{ state_attr('cast_volume_tracker.kitchen_speakers', 'value') | round(0) }} != 8
+        {% endif %}
