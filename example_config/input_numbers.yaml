@@ -1,6 +1,5 @@
 computer_speakers:
   name: Computer Speakers
-  icon: mdi:sort-numeric
   min: 0
   max: 100
   step: 1
@@ -23,7 +22,6 @@ computer_speakers:
 
 kitchen_home:
   name: Kitchen Home
-  icon: mdi:sort-numeric
   min: 0
   max: 100
   step: 1
@@ -46,7 +44,6 @@ kitchen_home:
 
 kitchen_speakers:
   name: Kitchen Speakers
-  icon: mdi:sort-numeric
   min: 0
   max: 100
   step: 1
