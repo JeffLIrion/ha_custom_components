@@ -186,7 +186,7 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
 
         # 1) Set the cast volume tracker volumes for members without default values
         # 2) Set the cast volume tracker volumes for members with default values
-        return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': self.cast_volume_trackers_without_default, 'volume_level': 0.01*self.value}]] + [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': member,'volume_level': 0.01*self.cast_network.casts[member].default_value}] for member in self.cast_volume_trackers_with_default]
+        return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': self.cast_volume_trackers_without_default, 'volume_level': 0.01*self.value}]] + [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': member,'volume_level': 0.01*self.cast_network.casts[member.replace('cast_volume_tracker.', '')].default_value}] for member in self.cast_volume_trackers_with_default]
 
     def _update_on_to_on(self):
         if all([self.cast_network.casts[member].is_volume_muted for member in self.members]):
