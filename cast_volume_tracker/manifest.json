@@ -1,0 +1,10 @@
+{
+  "domain": "cast_volume_tracker",
+  "name": "Cast volume tracker",
+  "documentation": "https://www.home-assistant.io/components/input_number",
+  "requirements": [],
+  "dependencies": ["cast"],
+  "codeowners": [
+    "@JeffLIrion"
+  ]
+}
