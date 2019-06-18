@@ -77,6 +77,7 @@ In addition to the parameters for a standard [`input_number`](https://www.home-a
 * **value_template**: a template that will provide the state for the `input_number`
 * **icon_template**: a template for this entity's icon
 * **entity_id**: a list of entity ID's involved in the `value_template` and `icon_template` templates
+* **value_changed_script**: a script or sequence of actions that will be performed when `value_template` changes (but not when `input_number.set_value` or `input_number.set_value_no_script` are called); the new value will be provided as the variable `value`
 
 
 ### Example Configuration

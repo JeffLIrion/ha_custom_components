@@ -71,6 +71,8 @@ from homeassistant.helpers.script import Script
 
 
 CONF_SET_VALUE_SCRIPT = 'set_value_script'
+CONF_VALUE_CHANGED_SCRIPT = 'value_changed_script'
+
 SERVICE_SET_VALUE_NO_SCRIPT = 'set_value_no_script'
 
 
@@ -101,7 +103,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_SET_VALUE_SCRIPT): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_ICON_TEMPLATE): cv.template
+            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+            vol.Optional(CONF_VALUE_CHANGED_SCRIPT): cv.SCRIPT_SCHEMA
         }, _cv_template_number)
     )
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -128,6 +131,7 @@ async def async_setup(hass, config):
             icon_template = cfg.get(CONF_ICON_TEMPLATE)
             set_value_script = cfg.get(CONF_SET_VALUE_SCRIPT)
             value_template = cfg.get(CONF_VALUE_TEMPLATE)
+            value_changed_script = cfg.get(CONF_VALUE_CHANGED_SCRIPT)
 
             # setup the entity ID's for the template
             template_entity_ids = set()
@@ -147,7 +151,7 @@ async def async_setup(hass, config):
             entities.append(TemplateNumber(
                 object_id, name, initial, minimum, maximum, step, icon,
                 icon_template, unit, mode, hass, value_template,
-                set_value_script, entity_ids))
+                set_value_script, entity_ids, value_changed_script))
 
             continue
 
@@ -296,7 +300,7 @@ class TemplateNumber(InputNumber):
 
     def __init__(self, object_id, name, initial, minimum, maximum, step, icon,
                  icon_template, unit, mode, hass, value_template,
-                 set_value_script, entity_ids):
+                 set_value_script, entity_ids, value_changed_script):
         """Initialize a template number."""
         super().__init__(object_id, name, initial, minimum, maximum, step,
                          icon, unit, mode)
@@ -313,11 +317,17 @@ class TemplateNumber(InputNumber):
         if self._icon_template is not None:
             self._icon_template.hass = self.hass
 
-        # script
+        # set_value_script
         if set_value_script:
             self._set_value_script = Script(hass, set_value_script)
         else:
             self._set_value_script = None
+
+        # value_changed_script
+        if value_changed_script:
+            self._value_changed_script = Script(hass, value_changed_script)
+        else:
+            self._value_changed_script = None
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass and register callbacks."""
@@ -400,8 +410,13 @@ class TemplateNumber(InputNumber):
         if self._value_template:
             try:
                 value = self._value_template.async_render()
-                if value not in ['None', 'unknown']:
+                if value not in ['None', 'unknown'] and self._current_value != float(value):
                     self._current_value = float(value)
+
+                    if self._value_changed_script:
+                        await self._value_changed_script.async_run(
+                            {"value": self._current_value}, context=self._context)
+
             except TemplateError as ex:
                 _LOGGER.error(ex)
 
