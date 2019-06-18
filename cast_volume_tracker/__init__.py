@@ -85,7 +85,42 @@ class CastVolumeTracker(object):
 
     def update(self, hass):
         """Update the cast volume tracker."""
-        pass
+        cast_state_obj = hass.states.get(self.media_player)
+        if cast_state_obj:
+            if cast_state_obj.state is None:
+                return []
+            cast_is_on = cast_state_obj.state in CAST_ON_STATES
+            cast_volume_level = cast_state_obj.attributes.get('volume_level')
+        else:
+            return []
+
+        # Off -> Off
+        if not self.cast_is_on and not cast_is_on:
+            self.cast_volume_level = cast_volume_level
+            return []
+
+        # Off -> On
+        if not self.cast_is_on and cast_is_on:
+            return self._update_off_to_on(cast_volume_level)
+
+        # On -> Off
+        if self.cast_is_on and not cast_is_on:
+            return self._update_on_to_off(cast_volume_level)
+
+        # On -> On and volume changed
+        if cast_volume_level is not None and round(self.expected_volume_level, 3) != round(cast_volume_level, 3):
+            return self._update_on_to_on(cast_volume_level)
+
+        return []
+
+    def _update_on_to_off(self, cast_volume_level):
+        return []
+
+    def _update_off_to_on(self, cast_volume_level):
+        return []
+
+    def _update_on_to_on(self, cast_volume_level):
+        return []
 
     def set_attributes(self, cast_is_on=None, value=None, is_volume_muted=None):
         """Set the attributes for the cast volume tracker."""
@@ -130,42 +165,9 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
         self.cast_volume_trackers_with_default = ['cast_volume_tracker.{0}'.format(member) for member in members if self.cast_network.casts[member].default_value is not None]
         self.cast_volume_trackers_without_default = ['cast_volume_tracker.{0}'.format(member) for member in members if self.cast_network.casts[member].default_value is None]
 
-    def update(self, hass):
-        """Update the cast volume tracker."""
-        equilibrium = self.equilibrium
-        cast_state_obj = hass.states.get(self.media_player)
-        if cast_state_obj:
-            cast_is_on = cast_state_obj.state in CAST_ON_STATES
-            self.cast_volume_level = cast_state_obj.attributes.get('volume_level')
-        else:
-            return []
-
-        if cast_is_on is None:
-            return []
-
-        # Off -> Off
-        if not self.cast_is_on and not cast_is_on:
-            return []
-
-        # Off -> On
-        if not self.cast_is_on and cast_is_on:
-            return self._update_off_to_on()
-
-        # On -> Off
-        if self.cast_is_on and not cast_is_on:
-            return self._update_on_to_off()
-
-        if not equilibrium:
-            return []
-
-        # On -> On and volume changed
-        if self.cast_volume_level is not None and round(self.expected_volume_level, 3) != round(self.cast_volume_level, 3):
-            return self._update_on_to_on()
-
-        return []
-
-    def _update_off_to_on(self):
+    def _update_off_to_on(self, cast_volume_level):
         self.cast_is_on = True
+        self.cast_volume_level = cast_volume_level
         self.is_volume_muted = False
         self.value = sum([self.cast_network.casts[member].value for member in self.members_when_off]) / len(self.members_when_off)
 
@@ -176,8 +178,9 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
         # 1) Set the cast volume tracker volumes
         return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': self.cast_volume_trackers, 'volume_level': 0.01*self.value}]]
 
-    def _update_on_to_off(self):
+    def _update_on_to_off(self, cast_volume_level):
         self.cast_is_on = False
+        self.cast_volume_level = cast_volume_level
         self.is_volume_muted = True
 
         # set the `cast_is_on` and `is_volume_muted` attributes for the speakers in the group
@@ -188,7 +191,12 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
         # 2) Set the cast volume tracker volumes for members with default values
         return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': self.cast_volume_trackers_without_default, 'volume_level': 0.01*self.value}]] + [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': member,'volume_level': 0.01*self.cast_network.casts[member.replace('cast_volume_tracker.', '')].default_value}] for member in self.cast_volume_trackers_with_default]
 
-    def _update_on_to_on(self):
+    def _update_on_to_on(self, cast_volume_level):
+        if not self.equilibrium:
+            return []
+
+        self.cast_volume_level = cast_volume_level
+
         if all([self.cast_network.casts[member].is_volume_muted for member in self.members]):
             self.is_volume_muted = True
         else:
@@ -263,50 +271,22 @@ class CastVolumeTrackerIndividual(CastVolumeTracker):
         """Whether or not a parent group is playing."""
         return any([self.cast_network.casts[parent].cast_is_on for parent in self.parents])
 
-    def update(self, hass):
-        """Update the cast volume tracker."""
-        cast_state_obj = hass.states.get(self.media_player)
-        if cast_state_obj:
-            cast_is_on = cast_state_obj.state in CAST_ON_STATES
-            self.cast_volume_level = cast_state_obj.attributes.get('volume_level')
-        else:
-            return []
-
-        # Parent is playing
+    def _update_off_to_on(self, cast_volume_level):
+        self.cast_volume_level = cast_volume_level
         if self.parent_is_on:
             return []
 
-        # State is unknown
-        if cast_is_on is None:
-            return []
-
-        # Off -> Off
-        if not self.cast_is_on and not cast_is_on:
-            return []
-
-        # Off -> On
-        if not self.cast_is_on and cast_is_on:
-            return self._update_off_to_on()
-
-        # On -> Off
-        if self.cast_is_on and not cast_is_on:
-            return self._update_on_to_off()
-
-        # On -> On, volume changed and parent is not playing
-        if self.cast_volume_level is not None and round(self.expected_volume_level, 3) != round(self.cast_volume_level, 3) and not self.parent_is_on:
-            return self._update_on_to_on()
-
-        # On -> On, volume did not change or parent is playing
-        return []
-
-    def _update_off_to_on(self):
         self.cast_is_on = True
         self.is_volume_muted = False
 
         # 1) Set the media player volume
         return [['media_player', SERVICE_VOLUME_SET, {'entity_id': self.media_player, 'volume_level': self.expected_volume_level}]]
 
-    def _update_on_to_off(self):
+    def _update_on_to_off(self, cast_volume_level):
+        self.cast_volume_level = cast_volume_level
+        if self.parent_is_on:
+            return []
+
         self.cast_is_on = False
         self.is_volume_muted = self.mute_when_off
 
@@ -316,7 +296,11 @@ class CastVolumeTrackerIndividual(CastVolumeTracker):
         # 1) Set the media player volume
         return [['media_player', SERVICE_VOLUME_SET, {'entity_id': self.media_player, 'volume_level': self.expected_volume_level}]]
 
-    def _update_on_to_on(self):
+    def _update_on_to_on(self, cast_volume_level):
+        self.cast_volume_level = cast_volume_level
+        if self.parent_is_on:
+            return []
+
         if not self.is_volume_muted:
             self.value = 100.*self.cast_volume_level
 
@@ -360,13 +344,6 @@ CN = CastNetwork()
 #                         Cast Volume Tracker setup                           #
 #                                                                             #
 # =========================================================================== #
-def cvt_setup(object_id, members=None, parents=None, cast_is_on=None, value=0, is_volume_muted=None, mute_when_off=True, default_volume_level=None):
-    if members:
-        return CastVolumeTrackerGroup(CN, object_id, members, cast_is_on=cast_is_on, value=value, is_volume_muted=is_volume_muted)
-
-    return CastVolumeTrackerIndividual(CN, object_id, parents, cast_is_on=cast_is_on, value=value, is_volume_muted=is_volume_muted)
-
-
 def _cv_cast_volume_tracker(cfg):
     """Configure validation helper for Cast volume tracker."""
     return cfg
