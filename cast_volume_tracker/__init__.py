@@ -19,11 +19,13 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CAST_ON_STATES = (STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 
-CONF_PARENTS = 'parents'
+CONF_DEFAULT_VOLUME_LEVEL = 'default_volume_level'
 CONF_MEMBERS = 'members'
 CONF_MEMBERS_EXCLUDED_WHEN_OFF = 'members_excluded_when_off'
 CONF_MUTE_WHEN_OFF = 'mute_when_off'
-CONF_DEFAULT_VOLUME_LEVEL = 'default_volume_level'
+CONF_OFF_SCRIPT = 'off_script'
+CONF_ON_SCRIPT = 'on_script'
+CONF_PARENTS = 'parents'
 
 
 SERVICE_DEFAULT_SCHEMA = vol.Schema({
@@ -357,7 +359,9 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_MEMBERS): cv.ensure_list,
             vol.Optional(CONF_MEMBERS_EXCLUDED_WHEN_OFF, default=list()): cv.ensure_list,
             vol.Optional(CONF_MUTE_WHEN_OFF, default=True): cv.boolean,
-            vol.Optional(CONF_DEFAULT_VOLUME_LEVEL): vol.Coerce(float)
+            vol.Optional(CONF_DEFAULT_VOLUME_LEVEL): vol.Coerce(float),
+            vol.Optional(CONF_OFF_SCRIPT): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_ON_SCRIPT): cv.SCRIPT_SCHEMA
         }, _cv_cast_volume_tracker)
     )
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -372,6 +376,7 @@ async def async_setup(hass, config):
     # setup individual speakers first
     for object_id, cfg in sorted(config[DOMAIN].items(), key=lambda x: CONF_MEMBERS in x[1]):
         name = cfg.get(CONF_NAME)
+        off_script = 
 
         cast_state_obj = hass.states.get('media_player.{0}'.format(object_id))
         if cast_state_obj:
