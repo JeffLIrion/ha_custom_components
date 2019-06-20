@@ -8,6 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EVENT_HOMEASSISTANT_S
 from homeassistant.components.media_player.const import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.script import Script
 
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
@@ -112,6 +113,9 @@ class CastVolumeTracker(object):
         # On -> On and volume changed
         if cast_volume_level is not None and round(self.expected_volume_level, 3) != round(cast_volume_level, 3):
             return self._update_on_to_on(cast_volume_level)
+
+        if cast_volume_level is not None:
+            self.cast_volume_level = cast_volume_level
 
         return []
 
