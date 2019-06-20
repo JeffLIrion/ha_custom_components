@@ -8,6 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EVENT_HOMEASSISTANT_S
 from homeassistant.components.media_player.const import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.script import Script
 
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
@@ -19,11 +20,13 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CAST_ON_STATES = (STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 
-CONF_PARENTS = 'parents'
+CONF_DEFAULT_VOLUME_LEVEL = 'default_volume_level'
 CONF_MEMBERS = 'members'
 CONF_MEMBERS_EXCLUDED_WHEN_OFF = 'members_excluded_when_off'
 CONF_MUTE_WHEN_OFF = 'mute_when_off'
-CONF_DEFAULT_VOLUME_LEVEL = 'default_volume_level'
+CONF_OFF_SCRIPT = 'off_script'
+CONF_ON_SCRIPT = 'on_script'
+CONF_PARENTS = 'parents'
 
 
 SERVICE_DEFAULT_SCHEMA = vol.Schema({
@@ -110,6 +113,9 @@ class CastVolumeTracker(object):
         # On -> On and volume changed
         if cast_volume_level is not None and round(self.expected_volume_level, 3) != round(cast_volume_level, 3):
             return self._update_on_to_on(cast_volume_level)
+
+        if cast_volume_level is not None:
+            self.cast_volume_level = cast_volume_level
 
         return []
 
@@ -357,7 +363,9 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_MEMBERS): cv.ensure_list,
             vol.Optional(CONF_MEMBERS_EXCLUDED_WHEN_OFF, default=list()): cv.ensure_list,
             vol.Optional(CONF_MUTE_WHEN_OFF, default=True): cv.boolean,
-            vol.Optional(CONF_DEFAULT_VOLUME_LEVEL): vol.Coerce(float)
+            vol.Optional(CONF_DEFAULT_VOLUME_LEVEL): vol.Coerce(float),
+            vol.Optional(CONF_OFF_SCRIPT): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_ON_SCRIPT): cv.SCRIPT_SCHEMA
         }, _cv_cast_volume_tracker)
     )
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -372,6 +380,8 @@ async def async_setup(hass, config):
     # setup individual speakers first
     for object_id, cfg in sorted(config[DOMAIN].items(), key=lambda x: CONF_MEMBERS in x[1]):
         name = cfg.get(CONF_NAME)
+        off_script = cfg.get(CONF_OFF_SCRIPT)
+        on_script = cfg.get(CONF_ON_SCRIPT)
 
         cast_state_obj = hass.states.get('media_player.{0}'.format(object_id))
         if cast_state_obj:
@@ -403,9 +413,9 @@ async def async_setup(hass, config):
                 value = 0.
 
         if CONF_MEMBERS not in cfg:
-            entities.append(CastVolumeTrackerEntity(hass, object_id, name, CastVolumeTrackerIndividual(CN, object_id, cast_is_on, value, is_volume_muted, cfg[CONF_PARENTS], cfg[CONF_MUTE_WHEN_OFF], cfg.get(CONF_DEFAULT_VOLUME_LEVEL))))
+            entities.append(CastVolumeTrackerEntity(hass, object_id, name, CastVolumeTrackerIndividual(CN, object_id, cast_is_on, value, is_volume_muted, cfg[CONF_PARENTS], cfg[CONF_MUTE_WHEN_OFF], cfg.get(CONF_DEFAULT_VOLUME_LEVEL)), off_script, on_script))
         else:
-            entities.append(CastVolumeTrackerEntity(hass, object_id, name, CastVolumeTrackerGroup(CN, object_id, cast_is_on, value, is_volume_muted, cfg[CONF_MEMBERS], cfg[CONF_MEMBERS_EXCLUDED_WHEN_OFF])))
+            entities.append(CastVolumeTrackerEntity(hass, object_id, name, CastVolumeTrackerGroup(CN, object_id, cast_is_on, value, is_volume_muted, cfg[CONF_MEMBERS], cfg[CONF_MEMBERS_EXCLUDED_WHEN_OFF]), off_script, on_script))
 
     if not entities:
         return False
@@ -427,13 +437,23 @@ async def async_setup(hass, config):
 class CastVolumeTrackerEntity(RestoreEntity):
     """Representation of a Cast volume tracker."""
 
-    def __init__(self, hass, object_id, name, cast_volume_tracker):
+    def __init__(self, hass, object_id, name, cast_volume_tracker, off_script, on_script):
         """Initialize a Cast Volume Tracker."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._entities = ['media_player.{0}'.format(object_id)]
         self._name = name
         self._cast_volume_tracker = cast_volume_tracker
+
+        if off_script:
+            self._off_script = Script(hass, off_script)
+        else:
+            self._off_script = None
+
+        if on_script:
+            self._on_script = Script(hass, on_script)
+        else:
+            self._on_script = None
 
     @property
     def should_poll(self):
@@ -494,7 +514,15 @@ class CastVolumeTrackerEntity(RestoreEntity):
 
     async def async_update(self):
         """Update the state and perform any necessary service calls."""
+        cast_is_on = self._cast_volume_tracker.cast_is_on
         service_args = self._cast_volume_tracker.update(self.hass)
 
         for args in service_args:
             await self.hass.services.async_call(*args)
+
+        if cast_is_on and not self._cast_volume_tracker.cast_is_on:
+            if self._off_script:
+                await self._off_script.async_run(context=self._context)
+        elif not cast_is_on and self._cast_volume_tracker.cast_is_on:
+            if self._on_script:
+                await self._on_script.async_run(context=self._context)
