@@ -174,9 +174,9 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
 
     def _update_off_to_on(self, cast_volume_level):
         self.cast_is_on = True
-        self.cast_volume_level = cast_volume_level
         self.is_volume_muted = False
         self.value = sum([self.cast_network.casts[member].value for member in self.members_when_off]) / len(self.members_when_off)
+        self.cast_volume_level = self.expected_volume_level
 
         # set the `cast_is_on` and `is_volume_muted` attributes for the speakers in the group
         for member in self.members:
@@ -279,12 +279,13 @@ class CastVolumeTrackerIndividual(CastVolumeTracker):
         return any([self.cast_network.casts[parent].cast_is_on for parent in self.parents])
 
     def _update_off_to_on(self, cast_volume_level):
-        self.cast_volume_level = cast_volume_level
         if self.parent_is_on:
+            self.cast_volume_level = cast_volume_level
             return []
 
         self.cast_is_on = True
         self.is_volume_muted = False
+        self.cast_volume_level = self.expected_volume_level
 
         # 1) Set the media player volume
         return [[MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.media_player, ATTR_MEDIA_VOLUME_LEVEL: self.expected_volume_level}]]
