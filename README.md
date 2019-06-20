@@ -54,12 +54,16 @@ For an individual cast device, the configuration variables are:
 * **parents** (optional): groups to which the cast device belongs
 * **mute_when_off** (optional, default=`true`): if `true`, when the cast device turns off the volume will be set to 0, effectively muting it; if `false`, the volume will be set to `default_volume_level` (if provided) or left as is
 * **default_volume_level** (optional): if provided, the volume for the cast device will be set to this level when the cast is turned off
+* **off_script**: a script or sequence of actions to perform when the speaker turns off
+* **on_script**: a script or sequence of actions to perform when the speaker turns on
 
 When the configuration variable `members` is provided, the cast volume tracker will be recognized as a group.  For cast groups, the configuration variables are:
 
 * **name** (required): friendly name for the cast volume tracker
 * **members**: the object ID's of the group members (e.g., `kitchen_home` for `media_player.kitchen_home`)
 * **members_excluded_when_off** (optional): when turning the group on, the volume for all speakers will be set to the average of the values of the cast volume trackers *not* included in this list
+* **off_script**: a script or sequence of actions to perform when the speaker turns off
+* **on_script**: a script or sequence of actions to perform when the speaker turns on
 
 The file [switches.yaml](./example_config/switches.yaml) demonstrates how to create switches for muting/un-muting `cast_volume_tracker` entities.
 
