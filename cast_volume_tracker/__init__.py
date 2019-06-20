@@ -4,8 +4,9 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EVENT_HOMEASSISTANT_START, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EVENT_HOMEASSISTANT_START, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.components.media_player.const import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED
+from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
@@ -57,7 +58,7 @@ class CastVolumeTracker(object):
         self.object_id = object_id
 
         # associated media player
-        self.media_player = 'media_player.{0}'.format(object_id)
+        self.media_player = '{0}.{1}'.format(MEDIA_PLAYER_DOMAIN, object_id)
 
         self.cast_is_on = cast_is_on
         self.cast_volume_level = None
@@ -93,7 +94,7 @@ class CastVolumeTracker(object):
             if cast_state_obj.state is None:
                 return []
             cast_is_on = cast_state_obj.state in CAST_ON_STATES
-            cast_volume_level = cast_state_obj.attributes.get('volume_level')
+            cast_volume_level = cast_state_obj.attributes.get(ATTR_MEDIA_VOLUME_LEVEL)
         else:
             return []
 
@@ -167,9 +168,9 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
             self.members_when_off = [member for member in members if member not in members_excluded_when_off]
 
         # cast volume trackers
-        self.cast_volume_trackers = ['cast_volume_tracker.{0}'.format(member) for member in members]
-        self.cast_volume_trackers_with_default = ['cast_volume_tracker.{0}'.format(member) for member in members if self.cast_network.casts[member].default_value is not None]
-        self.cast_volume_trackers_without_default = ['cast_volume_tracker.{0}'.format(member) for member in members if self.cast_network.casts[member].default_value is None]
+        self.cast_volume_trackers = [ENTITY_ID_FORMAT.format(member) for member in members]
+        self.cast_volume_trackers_with_default = [ENTITY_ID_FORMAT.format(member) for member in members if self.cast_network.casts[member].default_value is not None]
+        self.cast_volume_trackers_without_default = [ENTITY_ID_FORMAT.format(member) for member in members if self.cast_network.casts[member].default_value is None]
 
     def _update_off_to_on(self, cast_volume_level):
         self.cast_is_on = True
@@ -182,7 +183,7 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
             self.cast_network.casts[member].set_attributes(True, is_volume_muted=False)
 
         # 1) Set the cast volume tracker volumes
-        return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': self.cast_volume_trackers, 'volume_level': 0.01*self.value}]]
+        return [[DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.cast_volume_trackers, ATTR_MEDIA_VOLUME_LEVEL: 0.01*self.value}]]
 
     def _update_on_to_off(self, cast_volume_level):
         self.cast_is_on = False
@@ -195,7 +196,7 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
 
         # 1) Set the cast volume tracker volumes for members without default values
         # 2) Set the cast volume tracker volumes for members with default values
-        return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': self.cast_volume_trackers_without_default, 'volume_level': 0.01*self.value}]] + [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': member,'volume_level': 0.01*self.cast_network.casts[member.replace('cast_volume_tracker.', '')].default_value}] for member in self.cast_volume_trackers_with_default]
+        return [[DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.cast_volume_trackers_without_default, ATTR_MEDIA_VOLUME_LEVEL: 0.01*self.value}]] + [[DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: member, ATTR_MEDIA_VOLUME_LEVEL: 0.01*self.cast_network.casts[member.replace(DOMAIN + '.', '')].default_value}] for member in self.cast_volume_trackers_with_default]
 
     def _update_on_to_on(self, cast_volume_level):
         if not self.equilibrium:
@@ -212,7 +213,7 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
             self.value = 100.*self.cast_volume_level * len(self.members) / sum([not self.cast_network.casts[member].is_volume_muted for member in self.members])
 
         # 1) Set the cast volume trackers
-        return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': self.cast_volume_trackers, 'volume_level': 0.01*self.value}]]
+        return [[DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.cast_volume_trackers, ATTR_MEDIA_VOLUME_LEVEL: 0.01*self.value}]]
 
     def volume_mute(self, is_volume_muted):
         """Mute/Un-mute the volume for the group members."""
@@ -223,14 +224,14 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
             self.set_attributes(is_volume_muted=is_volume_muted)
 
             # 1) Mute the cast volume trackers
-            return [['cast_volume_tracker', SERVICE_VOLUME_MUTE, {'entity_id': self.cast_volume_trackers, 'is_volume_muted': is_volume_muted}]]
+            return [[DOMAIN, SERVICE_VOLUME_MUTE, {ATTR_ENTITY_ID: self.cast_volume_trackers, ATTR_MEDIA_VOLUME_MUTED: is_volume_muted}]]
 
         return []
 
     def volume_set(self, volume_level):
         """Set the volume level for the group members."""
         if not self.cast_is_on:
-            off_cast_volume_trackers = ['cast_volume_tracker.{0}'.format(member) for member in self.members_when_off if not self.cast_network.casts[member].cast_is_on]
+            off_cast_volume_trackers = [ENTITY_ID_FORMAT.format(member) for member in self.members_when_off if not self.cast_network.casts[member].cast_is_on]
 
             if not off_cast_volume_trackers:
                 return []
@@ -238,12 +239,12 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
             new_value = (100.*volume_level*len(off_cast_volume_trackers) + sum([self.cast_network.casts[member].value for member in self.members_when_off if self.cast_network.casts[member].cast_is_on])) / len(self.members_when_off)
             self.set_attributes(value=new_value)
 
-            return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': off_cast_volume_trackers, 'volume_level': volume_level}]]
+            return [[DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: off_cast_volume_trackers, ATTR_MEDIA_VOLUME_LEVEL: volume_level}]]
 
         self.set_attributes(value=100.*volume_level)
 
         # 1) Set the cast volume tracker volumes
-        return [['cast_volume_tracker', SERVICE_VOLUME_SET, {'entity_id': self.cast_volume_trackers, 'volume_level': volume_level}]]
+        return [[DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.cast_volume_trackers, ATTR_MEDIA_VOLUME_LEVEL: volume_level}]]
 
 
 # =========================================================================== #
@@ -286,7 +287,7 @@ class CastVolumeTrackerIndividual(CastVolumeTracker):
         self.is_volume_muted = False
 
         # 1) Set the media player volume
-        return [['media_player', SERVICE_VOLUME_SET, {'entity_id': self.media_player, 'volume_level': self.expected_volume_level}]]
+        return [[MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.media_player, ATTR_MEDIA_VOLUME_LEVEL: self.expected_volume_level}]]
 
     def _update_on_to_off(self, cast_volume_level):
         self.cast_volume_level = cast_volume_level
@@ -300,7 +301,7 @@ class CastVolumeTrackerIndividual(CastVolumeTracker):
             self.value = self.default_value
 
         # 1) Set the media player volume
-        return [['media_player', SERVICE_VOLUME_SET, {'entity_id': self.media_player, 'volume_level': self.expected_volume_level}]]
+        return [[MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.media_player, ATTR_MEDIA_VOLUME_LEVEL: self.expected_volume_level}]]
 
     def _update_on_to_on(self, cast_volume_level):
         self.cast_volume_level = cast_volume_level
@@ -311,7 +312,7 @@ class CastVolumeTrackerIndividual(CastVolumeTracker):
             self.value = 100.*self.cast_volume_level
 
         # 1) Set the media player volume
-        return [['media_player', SERVICE_VOLUME_SET, {'entity_id': self.media_player, 'volume_level': self.expected_volume_level}]]
+        return [[MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.media_player, ATTR_MEDIA_VOLUME_LEVEL: self.expected_volume_level}]]
 
     def volume_mute(self, is_volume_muted):
         """Mute/Un-mute the volume."""
@@ -319,7 +320,7 @@ class CastVolumeTrackerIndividual(CastVolumeTracker):
             self.set_attributes(is_volume_muted=is_volume_muted)
 
             # 1) Set the media player volume
-            return [['media_player', SERVICE_VOLUME_SET, {'entity_id': self.media_player, 'volume_level': self.expected_volume_level}]]
+            return [[MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.media_player, ATTR_MEDIA_VOLUME_LEVEL: self.expected_volume_level}]]
 
         return []
 
@@ -328,7 +329,8 @@ class CastVolumeTrackerIndividual(CastVolumeTracker):
         self.set_attributes(value=100.*volume_level)
 
         # 1) Set the media player volume
-        return [['media_player', SERVICE_VOLUME_SET, {'entity_id': self.media_player, 'volume_level': self.expected_volume_level}]]
+        return [[MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.media_player, ATTR_MEDIA_VOLUME_LEVEL: self.expected_volume_level}]]
+
 
 # =========================================================================== #
 #                                                                             #
@@ -383,26 +385,24 @@ async def async_setup(hass, config):
         off_script = cfg.get(CONF_OFF_SCRIPT)
         on_script = cfg.get(CONF_ON_SCRIPT)
 
-        cast_state_obj = hass.states.get('media_player.{0}'.format(object_id))
+        # Get the `cast_is_on`, `value`, and `is_volume_muted` attributes from the media player
+        cast_state_obj = hass.states.get('{0}.{1}'.format(MEDIA_PLAYER_DOMAIN, object_id))
         if cast_state_obj:
             cast_is_on = cast_state_obj.state in CAST_ON_STATES
-            cast_volume_level = cast_state_obj.attributes.get('volume_level')
+            cast_volume_level = cast_state_obj.attributes.get(ATTR_MEDIA_VOLUME_LEVEL)
 
             if cast_volume_level is not None:
                 is_volume_muted = cast_volume_level > 1e-3
                 value = 100.*cast_volume_level
             else:
-                state = await self.async_get_last_state()
-
-                if state.state is not None:
-                    value = state.state
+                is_volume_muted = cfg[CONF_MUTE_WHEN_OFF]
+                default_volume_level = cfg.get(CONF_DEFAULT_VOLUME_LEVEL)
+                if default_volume_level is not None:
+                    value = 100.*default_volume_level
                 else:
-                    value = 100.*cfg[CONF_DEFAULT_VOLUME_LEVEL]
+                    value = 0.
 
-                if state.attributes.get('is_volume_muted') is not None:
-                    is_volume_muted = state.attributes.get('is_volume_muted')
-                else:
-                    is_volume_muted = cfg[CONF_MUTE_WHEN_OFF]
+        # The media player is off --> the `value` and `is_volume_muted` attributes will be restored from the last state
         else:
             cast_is_on = False
             is_volume_muted = cfg[CONF_MUTE_WHEN_OFF]
@@ -441,7 +441,7 @@ class CastVolumeTrackerEntity(RestoreEntity):
         """Initialize a Cast Volume Tracker."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._entities = ['media_player.{0}'.format(object_id)]
+        self._entities = ['{0}.{1}'.format(MEDIA_PLAYER_DOMAIN, object_id)]
         self._name = name
         self._cast_volume_tracker = cast_volume_tracker
 
@@ -493,6 +493,21 @@ class CastVolumeTrackerEntity(RestoreEntity):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, cast_volume_tracker_startup)
 
         await super().async_added_to_hass()
+
+        # If the cast is off, restore the last `value` and `is_volume_muted` attributes
+        if self._cast_volume_tracker.cast_is_on:
+            return
+
+        state = await self.async_get_last_state()
+        value = state and float(state.state)
+        is_volume_muted = state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
+
+        # Check against None because value can be 0
+        if value is not None:
+            self._cast_volume_tracker.value = value
+
+        if is_volume_muted is not None:
+            self._cast_volume_tracker.is_volume_muted = is_volume_muted
 
     async def async_volume_set(self, volume_level):
         """Set new volume level."""
