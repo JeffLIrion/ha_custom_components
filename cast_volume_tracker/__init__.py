@@ -213,7 +213,7 @@ class CastVolumeTrackerGroup(CastVolumeTracker):
             self.value = 100.*self.cast_volume_level * len(self.members) / sum([not self.cast_network.casts[member].is_volume_muted for member in self.members])
 
         # 1) Set the cast volume trackers
-        return [[DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.cast_volume_trackers, ATTR_MEDIA_VOLUME_LEVEL: 0.01*self.value}]]
+        return [[DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: self.cast_volume_trackers, ATTR_MEDIA_VOLUME_LEVEL: 0.01*self.value}]]*2
 
     def volume_mute(self, is_volume_muted):
         """Mute/Un-mute the volume for the group members."""
